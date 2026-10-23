@@ -2,6 +2,8 @@
 
 1. Docelowa struktura katalogów
 Tak powinno wyglądać repozytorium dla TST:
+
+
 appian-gitops/
 ├── base/
 │   ├── appian.yaml
