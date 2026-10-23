@@ -1,0 +1,31 @@
+
+stages:
+  - appian_lifecycle
+
+appian_stop:
+  stage: appian_lifecycle
+
+  variables:
+    MANIFEST_PATH: "environments/lifecycle/tst/kustomization.yaml"
+
+  script:
+    - |
+      podman run --rm \
+        -v "${MANIFEST_PATH}:/manifest.yaml" \
+        "${YQ_IMAGE}" \
+        yq -y -i '.resources = [] | del(.patches)' /manifest.yaml
+
+    - |
+      if git diff --quiet -- "$MANIFEST_PATH"; then
+        echo "Appian jest już w stanie stopped."
+        exit 0
+      fi
+
+    - git config user.name "GitLab CI"
+    - git config user.email "gitlab-ci@example.com"
+    - git add "$MANIFEST_PATH"
+    - git commit -m "chore(appian-tst): stop Appian"
+    - git push origin "HEAD:${CI_COMMIT_BRANCH}"
+
+  rules:
+    - when: manual
