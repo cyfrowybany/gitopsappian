@@ -1,0 +1,65 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: appian-tst
+  namespace: openshift-gitops
+
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+
+  generators:
+    - list:
+        elements:
+          # Zasoby środowiskowe TST - sync manualny
+          - appName: appian-tst
+            sourcePath: environments/tst
+            autoSync: false
+            autoPrune: false
+            allowEmpty: false
+
+          # Appian CR - cykl życia sterowany przez GitOps
+          - appName: appian-tst-lifecycle
+            sourcePath: environments/lifecycle/tst
+            autoSync: true
+            autoPrune: true
+            allowEmpty: true
+
+  template:
+    metadata:
+      name: '{{.appName}}'
+      labels:
+        appian-environment: tst
+
+    spec:
+      project: default
+
+      source:
+        repoURL: https://gitlab.example.com/platform/appian-gitops.git
+        targetRevision: main
+        path: '{{.sourcePath}}'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: appian-tst
+
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=false
+          - ServerSideApply=true
+
+  templatePatch: |
+    {{- if .autoSync }}
+    spec:
+      syncPolicy:
+        automated:
+          enabled: true
+          prune: {{ .autoPrune }}
+          selfHeal: false
+          allowEmpty: {{ .allowEmpty }}
+        syncOptions:
+          - CreateNamespace=false
+          - ServerSideApply=true
+    {{- end }}
