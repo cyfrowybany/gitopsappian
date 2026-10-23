@@ -1,0 +1,120 @@
+
+apiVersion: crd.k8s.appian.com/v1beta1
+kind: Appian
+metadata:
+  name: appian
+
+spec:
+  # Wersja platformy — pełny numer builda Appian
+  version: REPLACE_WITH_FULL_APPIAN_BUILD_VERSION
+
+  # Przykładowa konfiguracja TST
+  url: https://appian-tst.example.com
+
+  # Przykładowe nazwy zasobów licencyjnych
+  k3LicSecretName: example-k3lic-secret
+  k4LicSecretName: example-k4lic-secret
+  appianLicConfigMapName: example-appian-lic-cm
+
+  # --------------------------------------------------
+  # ZOOKEEPER
+  # --------------------------------------------------
+  zookeeper:
+    replicas: 3
+    resources:
+      requests:
+        cpu: 100m
+        memory: 307Mi
+      limits:
+        cpu: 200m
+        memory: 448Mi
+
+  # --------------------------------------------------
+  # KAFKA
+  # --------------------------------------------------
+  kafka:
+    replicas: 3
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1229Mi
+      limits:
+        cpu: 2000m
+        memory: 1792Mi
+
+  # --------------------------------------------------
+  # SEARCH SERVER
+  # --------------------------------------------------
+  searchServer:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1536Mi
+      limits:
+        cpu: 300m
+        memory: 3Gi
+
+  # --------------------------------------------------
+  # DATA SERVER
+  # --------------------------------------------------
+  dataServer:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: 200m
+        memory: 1Gi
+
+  # --------------------------------------------------
+  # SERVICE MANAGER
+  # --------------------------------------------------
+  serviceManager:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 200m
+        memory: 2560Mi
+      limits:
+        cpu: 2000m
+        memory: 32Gi
+
+  # --------------------------------------------------
+  # WEBAPP
+  # --------------------------------------------------
+  webapp:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 4608Mi
+      limits:
+        cpu: 1000m
+        memory: 6Gi
+
+  # --------------------------------------------------
+  # HTTPD
+  # --------------------------------------------------
+  httpd:
+    replicas: 2
+    resources:
+      requests:
+        cpu: 100m
+        memory: 32Mi
+      limits:
+        cpu: 300m
+        memory: 48Mi
+
+  # --------------------------------------------------
+  # RPA — jeśli komponent jest skonfigurowany w bazie
+  # --------------------------------------------------
+  rpa:
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 2560Mi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
