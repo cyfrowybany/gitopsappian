@@ -1,8 +1,8 @@
-
+l
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: appian-tst
+  name: appian-nonprod
   namespace: openshift-gitops
 
 spec:
@@ -13,23 +13,33 @@ spec:
   generators:
     - list:
         elements:
-          # Zasoby środowiskowe TST - sync manualny
-          - appName: appian-tst
-            sourcePath: environments/tst
-            autoSync: false
-            autoPrune: false
-            allowEmpty: false
+          # Konfiguracja globalna
+          - name: appian-default-conf-tst
+            env-dir: default_conf/tst
+            namespace: appian-tst
+            autoSync: "true"
+            autoPrune: "true"
+            allowEmpty: "true"
 
-          # Appian CR - cykl życia sterowany przez GitOps
-          - appName: appian-tst-lifecycle
-            sourcePath: environments/lifecycle/tst
-            autoSync: true
-            autoPrune: true
-            allowEmpty: true
+          # Instancja Appian — ręczna synchronizacja
+          - name: appian-tst-custom-instance
+            env-dir: tst/custom
+            namespace: appian-tst
+            autoSync: "false"
+            autoPrune: "false"
+            allowEmpty: "false"
+
+          # Appian CR — lifecycle sterowany przez GitOps
+          - name: appian-tst-lifecycle
+            env-dir: tst
+            namespace: appian-tst
+            autoSync: "true"
+            autoPrune: "true"
+            allowEmpty: "true"
 
   template:
     metadata:
-      name: '{{.appName}}'
+      name: '{{ .name }}'
       labels:
         appian-environment: tst
 
@@ -39,19 +49,20 @@ spec:
       source:
         repoURL: https://gitlab.example.com/platform/appian-gitops.git
         targetRevision: main
-        path: '{{.sourcePath}}'
+        path: 'environments/{{ .env-dir }}'
 
       destination:
         server: https://kubernetes.default.svc
-        namespace: appian-tst
+        namespace: '{{ .namespace }}'
 
       syncPolicy:
         syncOptions:
-          - CreateNamespace=false
           - ServerSideApply=true
+          - CreateNamespace=false
+          - PrunePropagationPolicy=background
 
   templatePatch: |
-    {{- if .autoSync }}
+    {{ if eq .autoSync "true" }}
     spec:
       syncPolicy:
         automated:
@@ -60,6 +71,7 @@ spec:
           selfHeal: false
           allowEmpty: {{ .allowEmpty }}
         syncOptions:
-          - CreateNamespace=false
           - ServerSideApply=true
-    {{- end }}
+          - CreateNamespace=false
+          - PrunePropagationPolicy=background
+    {{ end }}
